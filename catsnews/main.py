@@ -5,6 +5,7 @@ from catscore.lib.time import get_today_date
 import json
 from catscore.lib.logger import CatsLogging as logging
 from catsnews.gunosy.ranking import GunosyRankingSite
+from catsnews.natalie.popular import NataliePopularSite
 
 def main():
     parser = argparse.ArgumentParser(description="cats slave")
@@ -12,6 +13,7 @@ def main():
     # args params
     parser.add_argument('-conf', '--conf', help="configuration file", required=True)
     parser.add_argument('-gunocy', '--gunocy', nargs='*', choices=['ranking'], help="gunocy functions")
+    parser.add_argument('-natalie', '--natalie', nargs='*', choices=['popular'], help="gunocy functions")
     args = parser.parse_args()
     print(args)
     
@@ -28,6 +30,10 @@ def main():
     if args.gunocy:
         for args in args.gunocy:
             r = GunosyRankingSite(request).save_all_ranking_as_json(conf["output"]["dir"])
+            print(r)
+    if args.natalie:
+        for args in args.natalie:
+            r = NataliePopularSite(request).save_all_category_as_json(conf["output"]["dir"])
             print(r)
 
 if __name__ == "__main__":
