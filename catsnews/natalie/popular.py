@@ -41,27 +41,30 @@ class NataliePopularSite:
         self.request:CatsRequest = request
         
     def pull_page(self, url) -> NataliePopularPage:
-        content = self.request.get(url=url, response_content_type="html").content
-        popular_category = ",".join(list(map(lambda x: x.text, content.find("ul", {"class": "NA_breadcrumb"}).findAll("li"))))
-        article_lists = content.find("ul", {"class": "NA_articleList"}).findAll("li")
-        def _parse_article(article):
-            try:
-                title = article.find("dt", {"class": "NA_title"}).text.replace("\n","").replace(",","").replace("\"","")
-                detail_link = article.find("a").get("href")
-                article = NatalieArticleSite(request=self.request, url=detail_link).pull()
-                return article
-            except Exception:
-                logging.error(f"_parse_article error occured : {sys.exc_info()}")
-                return None
-        natalie_articles = filter_none(list(map(lambda a: _parse_article(a), article_lists)))
-        return NataliePopularPage(populer_url=url, popular_category=popular_category, natalie_articles=natalie_articles)
+        try:
+            content = self.request.get(url=url, response_content_type="html").content
+            popular_category = ",".join(list(map(lambda x: x.text, content.find("ul", {"class": "NA_breadcrumb"}).findAll("li"))))
+            article_lists = content.find("ul", {"class": "NA_articleList"}).findAll("li")
+            def _parse_article(article):
+                try:
+                    title = article.find("dt", {"class": "NA_title"}).text.replace("\n","").replace(",","").replace("\"","")
+                    detail_link = article.find("a").get("href")
+                    article = NatalieArticleSite(request=self.request, url=detail_link).pull()
+                    return article
+                except Exception:
+                    logging.error(f"_parse_article error occured : {sys.exc_info()}")
+                    return None
+            natalie_articles = filter_none(list(map(lambda a: _parse_article(a), article_lists)))
+            return NataliePopularPage(populer_url=url, popular_category=popular_category, natalie_articles=natalie_articles)
+        except Exception:
+            return None
 
     def pull_all_page(self, url, range_num=10) -> NataliePopular:
         top = f"{url}/news/list/order_by/views"
         def _page_link(id):
             return f"{url}/news/list/page/{id}/order_by/views"
         page_links = list(map(lambda id: _page_link(id=id), list(range(1, range_num))))
-        natalie_populare_pages = list(map(lambda url: self.pull_page(url=url), page_links))
+        natalie_populare_pages = filter_none(list(map(lambda url: self.pull_page(url=url), page_links)))
         return NataliePopular(natalie_populare_pages=natalie_populare_pages)
         
     def pull_all_category(self) -> AllNataliePopular:
